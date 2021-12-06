@@ -5,19 +5,6 @@ import Text.Printf
 
 type Fish = Int
 
--- For a fish with daysTillSpawn n, figure out how many fish it spawns, plus how many they each spawn, recursively
-howManySpawns :: Int -> Fish -> Int
-howManySpawns numDays f = howManySpawns' numDays f 0
-
-howManySpawns' :: Int -> Fish -> Int -> Int
-howManySpawns' numDays f curDay
-  | daysLeft < 0  = 1 -- count the fish this was called for once on the last day
-  | otherwise = (howManySpawns' numDays f nextDay) + newSpawn
-  where newSpawn = if newSpawnDay then howManySpawns' numDays (curDay + 8) curDay else 0
-        newSpawnDay = curDay >= f && (curDay - f) `mod` 7 == 1
-        daysLeft = numDays - curDay
-        nextDay = curDay + 1
-
 parseInput :: String -> [Fish]
 parseInput s = map (read :: String -> Int) intStrs
   where intStrs = splitOn ',' s
@@ -29,18 +16,26 @@ splitOn d s = foldr f [""] s
           | c == d = "":l
           | otherwise = (c:x):xs
 
-showFishStates :: [Fish] -> String
-showFishStates fishes = foldr1 (\a b -> a ++ "," ++ b) $ map show fishes
+apply :: Int -> (a -> a) -> (a -> a)
+apply 0 _ = id
+apply n f = (apply (n - 1) f) . f
+
+-- move each fish into the next bucket, add spawns to the x8 bucket
+step :: [Int] -> [Int]
+step (x0:x1:x2:x3:x4:x5:x6:x7:x8:[]) = x1:x2:x3:x4:x5:x6:(x7+x0):x8:x0:[]
+
+-- Count fish by days till spawn and bucket them
+initBuckets :: [Fish] -> [Int]
+initBuckets fishes = do
+  daystillSpawn <- [0..8]
+  return $ length $ filter (== daystillSpawn) fishes
 
 {-
-   Iterating over lots of timers is expensive in CPU and memory. Let's project forward from the initial state
-   using modular arithmetic and some recursion instead.
+   Iterating over lots of timers is expensive in CPU and memory. Instead, let's keep
+   buckets for each number of days till spawn.
 -}
 main = do
-  content <- readFile "06-input-test.txt"
+  content <- readFile "06-input.txt"
   let fishes = parseInput content
-  --let total = sum $ map (howManySpawns 256) fishes
-  --putStrLn $ "After 256 days: " ++ (show total)
-  --putStrLn $ foldr1 (\a b -> a ++ "\n" ++ b) $ map (\(n, f) -> "After " ++ (show n) ++ " days: " ++ (show f)) $ map (\n -> (n, sum $ map (howManySpawns n) fishes)) [0..18]
-  --putStrLn "First fish:"
-  putStrLn $ foldr1 (\a b -> a ++ "\n" ++ b) $ map (\(n, f) -> "After " ++ (show n) ++ " days: " ++ (show f)) $ map (\n -> (n, howManySpawns n 3)) [0..18]
+  let startBuckets = initBuckets fishes
+  putStrLn $ "After 256 days: " ++ (show $ sum $ apply 256 step startBuckets)
