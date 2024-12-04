@@ -1,6 +1,5 @@
 module DayOne where
 
-import System.IO
 import Data.List
 import Data.IntMap.Strict (IntMap)
 import qualified Data.IntMap.Strict as IntMap
@@ -12,8 +11,8 @@ listsToTuples :: [Int] -> ([Int], [Int])
 listsToTuples xs = listsToTuples' xs ([], [])
 
 listsToTuples' :: [Int] -> ([Int], [Int]) -> ([Int], [Int])
-listsToTuples' [] tuples = tuples
 listsToTuples' (a:b:xs) (as, bs) = listsToTuples' xs ((a:as), (b:bs))
+listsToTuples' _ tuples = tuples
 
 sortedTuples :: ([Int], [Int]) -> ([Int], [Int])
 sortedTuples (a, b) = (sort a, sort b)
