@@ -1,16 +1,5 @@
 module DayTwo where
 
-import Data.List
-import System.IO
-import Data.Map (valid)
-
-numbersFromFile :: String -> IO [[Int]]
-numbersFromFile path = do
-  contents <- readFile path
-  let reportStrings = map words $ lines contents
-  let reports = map (map readInt) reportStrings
-  return reports
-
 readInt :: String -> Int
 readInt = read
 
