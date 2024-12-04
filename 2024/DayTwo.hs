@@ -1,3 +1,5 @@
+module DayTwo where
+
 import Data.List
 import System.IO
 import Data.Map (valid)
@@ -13,7 +15,7 @@ readInt :: String -> Int
 readInt = read
 
 allPairs :: (Int -> Int -> Bool) -> [(Int, Int)] -> Bool
-allPairs f pairs = foldl1' (&&) $ map (uncurry f) pairs
+allPairs f = all $ uncurry f
 
 validStepping :: Int -> Int -> Bool
 validStepping x y = diff >= 1 && diff <= 3
@@ -25,6 +27,22 @@ safeReport xs = validDirection && validSteppings
         validDirection = allPairs (<=) pairs || allPairs (>) pairs
         validSteppings = allPairs validStepping pairs
 
-main = do
-  reports <- numbersFromFile "02-1-input.txt"
-  print $ length . filter id $ map safeReport reports
+reportPerms :: [Int] -> [[Int]]
+reportPerms xs = xs : reportPerms' [] xs
+
+reportPerms' :: [Int] -> [Int] -> [[Int]]
+reportPerms' _ [] = []
+reportPerms' xs (y:ys) = chopOffRightHead:nextPerm
+    where chopOffRightHead = xs ++ ys
+          nextPerm = reportPerms' (xs ++ [y]) ys
+
+anySafeReport :: [Int] -> Bool
+anySafeReport xs = any safeReport perms
+    where perms = reportPerms xs
+
+runDay :: String -> (String, String)
+runDay input = do
+  let reports = map (map readInt . words) $ lines input
+  let resultOne = show $ length . filter id $ map safeReport reports
+  let resultTwo = show $ length . filter id $ map anySafeReport reports
+  (resultOne, resultTwo)
